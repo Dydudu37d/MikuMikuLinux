@@ -1,6 +1,7 @@
 #include "Fish3D.h"
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
@@ -14,7 +15,9 @@ int main(){
 	}
 	SDL_Window *Window=SDL_CreateWindow("",Dw/4,Dh/4,Dw/2,Dh/2,SDL_WINDOW_SHOWN);
 	_Bool running=1;
-	SDSL_Event Event;
+	SDL_Event Event;
+	Square3D Cube=CreateSquare(10, 10, 10);
+
 	while (running){
 		while(SDL_PollEvent(&Event)){
 			if (Event.type == SDL_QUIT){
@@ -24,6 +27,8 @@ int main(){
 				// if(Event.key.keysym.sym == SDLK_XXXX){}
 			}
 		}
+		
+		SDL_Delay(16);
 	}
 
 	SDL_DestroyWindow(Window);
