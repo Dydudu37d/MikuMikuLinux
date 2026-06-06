@@ -13,16 +13,15 @@ typedef struct {Pos3D Pos;uint64_t FaceCount;FaceTriangle Faces[];} __attribute_
 
 #define SIGNED_TO_ORDERED_UINT64(i64) ((uint64_t)(i64) ^ 0x8000000000000000ULL)
 
-#define PROJECTION_X(local_x, world_pos_x, z, Screen_W, FOCAL_LENGTH) \
-    (z ? (int)( (((double)(local_x) - (local_x ? local_x/2 : 0)) * FOCAL_LENGTH) / (double)(z) + (double)(world_pos_x) + ((double)(Screen_W) / 2.0f) ) : 0)
+#define PROJECTION_X(x, z, Screen_W, FOCAL_LENGTH) \
+    ((z) > 0 ? (int)( ((double)(x) * (FOCAL_LENGTH)) / (double)(z) + ((double)(Screen_W) / 2.0f) ) : 0)
 
-#define PROJECTION_Y(local_y, world_pos_y, z, Screen_H, FOCAL_LENGTH) \
-    (z ? (int)( (((double)(local_y) - (local_y ? local_y/2 : 0)) * FOCAL_LENGTH) / (double)(z) + (double)(world_pos_y) + ((double)(Screen_H) / 2.0f) ) : 0)
+#define PROJECTION_Y(y, z, Screen_H, FOCAL_LENGTH) \
+    ((z) > 0 ? (int)( ((double)(y) * (FOCAL_LENGTH)) / (double)(z) + ((double)(Screen_H) / 2.0f) ) : 0)
 
+#define CreateTriangle(x,y,z,s) ((Triangle3D){(Pos3D){x,y,z},{0,s,0, 0,0,0, 0,0,s, 0,0,s},{0,0,0, 0,s,0, 0,s,0, 0,s,0},{0,0,s, 0,0,s, s,0,0, 0,0,0}})
 
-#define CreateTriangle(x,y,z) ((Triangle3D){(Pos3D){x,y,z},{0,1,0, 0,0,0, 0,0,1, 0,0,1},{0,0,0, 0,1,0, 0,1,0, 0,1,0},{0,0,1, 0,0,1, 1,0,0, 0,0,0}})
-
-#define CreateSquare(x,y,z) ((Square3D){(Pos3D){x,y,z},{0,1,1,0, 0,0,0,0, 0,1,1,0, 0,1,1,0, 0,1,1,0, 1,1,1,1},{0,0,0,0, 0,1,1,0, 0,0,1,1, 0,0,1,1, 1,1,1,1, 0,1,1,0},{0,0,1,1, 0,1,1,0, 1,1,1,1, 0,0,0,0, 0,0,1,1, 0,0,1,1}})
+#define CreateSquare(x,y,z,s) ((Square3D){(Pos3D){x,y,z},{ 0,s,s,0,  0,s,s,0,  0,0,0,0,  s,s,s,s,  0,s,s,0,  0,s,s,0 },{ 0,0,s,s,  0,0,s,s,  0,0,s,s,  0,0,s,s,  0,0,0,0,  s,s,s,s },{ 0,0,0,0,  s,s,s,s,  0,s,s,0,  0,s,s,0,  0,0,s,s,  0,0,s,s }})
 
 #define RotateX(x,y,z,c,s) \
 	do {\

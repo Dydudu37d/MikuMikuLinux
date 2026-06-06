@@ -8,21 +8,42 @@
 #include <SDL2/SDL_rect.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#include <inttypes.h>
 
-void DrawSquare3D(SDL_Renderer *Render,Square3D Obj,int ScreenW,int ScreenH,uint8_t r,uint8_t g,uint8_t b,uint8_t a,int Pov){
-	if (Obj.Pos.z == 0) return;
-	SDL_SetRenderDrawColor(Render, r, g, b, a);
-	Pos3D Pos=Obj.Pos;
-	for (int i = 0; i < 24; i++) {
-		if (Pos.z + Obj.z[i] <= 0) continue;
-		int next_idx = (i & ~3) + ((i + 1) & 3); 
-		if (Pos.z + Obj.z[next_idx] <= 0) continue;
-		int x1 = PROJECTION_X(Obj.x[i],        Pos.x, Pos.z + Obj.z[i],        ScreenW, Pov);
-		int y1 = PROJECTION_Y(Obj.y[i],        Pos.y, Pos.z + Obj.z[i],        ScreenH, Pov);
-		int x2 = PROJECTION_X(Obj.x[next_idx], Pos.x, Pos.z + Obj.z[next_idx], ScreenW, Pov);
-		int y2 = PROJECTION_Y(Obj.y[next_idx], Pos.y, Pos.z + Obj.z[next_idx], ScreenH, Pov);
-		SDL_RenderDrawLine(Render, x1, y1, x2, y2);
-	}
+void DrawSquare3D(SDL_Renderer *Render, Square3D Obj, int ScreenW, int ScreenH, uint8_t r, uint8_t g, uint8_t b, uint8_t a, int Pov, Pos3D CamPos) {
+    SDL_SetRenderDrawColor(Render, r, g, b, a);
+    Pos3D Pos = Obj.Pos;
+
+    for (int i = 0; i < 24; i += 4) {
+        
+        int sx[4], sy[4];
+        _Bool face_valid = 1;
+
+        for (int j = 0; j < 4; j++) {
+            int idx = i + j;
+            int64_t abs_x = Pos.x + Obj.x[idx] - CamPos.x;
+            int64_t abs_y = Pos.y + Obj.y[idx] - CamPos.y;
+            int64_t abs_z = Pos.z + Obj.z[idx] - CamPos.z;
+
+            if (abs_z <= 0) {
+                face_valid = 0;
+                break;
+            }
+
+            sx[j] = PROJECTION_X(abs_x, abs_z, ScreenW, Pov);
+            sy[j] = PROJECTION_Y(abs_y, abs_z, ScreenH, Pov);
+        }
+
+        if (face_valid) {
+            SDL_RenderDrawLine(Render, sx[0], sy[0], sx[1], sy[1]);
+            SDL_RenderDrawLine(Render, sx[1], sy[1], sx[2], sy[2]);
+            SDL_RenderDrawLine(Render, sx[2], sy[2], sx[3], sy[3]);
+            SDL_RenderDrawLine(Render, sx[3], sy[3], sx[0], sy[0]);
+            
+            printf("FACE[%d]: (%d,%d) -> (%d,%d) -> (%d,%d) -> (%d,%d) -> ClOSED\n", 
+                   i / 4, sx[0], sy[0], sx[1], sy[1], sx[2], sy[2], sx[3], sy[3]);
+        }
+    }
 }
 
 int main(){
@@ -56,7 +77,8 @@ int main(){
 	}
 	int WindowW,WindowH;
 	_Bool running=1;
-	Square3D Cube=CreateSquare(10, 10, 10);
+	Square3D Cube=CreateSquare(10, 10, 10, 30);
+    Pos3D CamPos={0};
 	SDL_Event Event;
 	while (running){
 		SDL_GetWindowSize(Window, &WindowW, &WindowH);
@@ -67,11 +89,11 @@ int main(){
 		}
 		const uint8_t* KeyState = SDL_GetKeyboardState(NULL);
 		
-		Cube.Pos.x+=(KeyState[SDL_SCANCODE_D]-KeyState[SDL_SCANCODE_A])*10;
-		Cube.Pos.y+=(KeyState[SDL_SCANCODE_E]-KeyState[SDL_SCANCODE_Q])*10;
-		Cube.Pos.z+=(KeyState[SDL_SCANCODE_W]-KeyState[SDL_SCANCODE_S])* 1;
+		Cube.Pos.x+=(KeyState[SDL_SCANCODE_D]-KeyState[SDL_SCANCODE_A]);
+		Cube.Pos.y+=(KeyState[SDL_SCANCODE_Q]-KeyState[SDL_SCANCODE_E]);
+		Cube.Pos.z+=(KeyState[SDL_SCANCODE_S]-KeyState[SDL_SCANCODE_W]);
 
-		DrawSquare3D(Render, Cube, WindowW, WindowH, 255, 255, 255, 255,1000);
+		DrawSquare3D(Render, Cube, WindowW, WindowH, 255, 255, 255, 255,500,CamPos);
 
 		SDL_RenderPresent(Render);
 		SDL_Delay(16);

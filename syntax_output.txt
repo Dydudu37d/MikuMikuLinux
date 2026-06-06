@@ -1,0 +1,148 @@
+
+
+--- Syntax items ---
+cStatement     xxx return goto asm continue break
+                   links to Statement
+cLabel         xxx default case
+                   links to Label
+cConditional   xxx switch if else
+                   links to Conditional
+cRepeat        xxx for while do
+                   links to Repeat
+cTodo          xxx contained XXX contained FIXME contained TODO
+                   links to Todo
+cBadContinuation xxx match /\\\s\+$/  contained 
+                   links to Error
+cSpecial       xxx match /\\\%(x\x\+\|\o\{1,3}\|.\|$\)/  display contained 
+                   match /\\\%(u\x\{4}\|U\x\{8}\)/  display contained 
+                   links to SpecialChar
+cFormat        xxx match /%\%(\d\+\$\)\=[-+' #0*]*\%(\d*\|\*\|\*\d\+\$\)\%(\.\%(\d*\|\*\|\*\d\+\$\)\)\=\%([hlLjzt]\|ll\|hh\)\=\%([aAbdiuoxXDOUfFeEgGcCsSpn]\|\[\^\=.[^]]*\]\)/  display contained 
+                   match /%%/  display contained 
+                   links to cSpecial
+cString        xxx start=/\%(L\|U\|u8\)\="/ skip=/\\\\\|\\"/ end=/"/  extend contains=cSpecial,cFormat,@Spell 
+                   start=/\%(U\|u8\=\)"/ skip=/\\\\\|\\"/ end=/"/  extend contains=cSpecial,cFormat,@Spell 
+                   links to String
+cCppString     xxx start=/\%(L\|U\|u8\)\="/ skip=/\\\\\|\\"\|\\$/ end=/$/ end=/"/  excludenl contains=cSpecial,cFormat,@Spell 
+                   links to cString
+cCppSkip       xxx start=/^\s*\%(%:\|#\)\s*\%(if\>\|ifdef\>\|ifndef\>\)/ skip=/\\$/ end=/^\s*\%(%:\|#\)\s*endif\>/  contained contains=cSpaceError,cCppSkip 
+cCharacter     xxx match /L\='[^\\]'/  
+                   match /L'[^']*'/  contains=cSpecial 
+                   match /[Uu]'[^\\]'/  
+                   match /[Uu]'[^']*'/  contains=cSpecial 
+                   match /u8'[^\\]'/  
+                   match /u8'[^']*'/  contains=cSpecial 
+                   links to Character
+cSpecialError  xxx match /L\='\\[^'\"?\\abfnrtv]'/  
+                   match /[Uu]'\\[^'\"?\\abfnrtv]'/  
+                   match /u8'\\[^'\"?\\abfnrtv]'/  
+                   links to cError
+cSpecialCharacter xxx match /L\='\\['\"?\\abfnrtv]'/  
+                   match /L\='\\\o\{1,3}'/  display 
+                   match /'\\x\x\{1,2}'/  display 
+                   match /L'\\x\x\+'/  display 
+                   match /[Uu]'\\['\"?\\abfnrtv]'/  
+                   match /[Uu]'\\\o\{1,3}'/  display 
+                   match /[Uu]'\\x\x\+'/  display 
+                   match /u8'\\['\"?\\abfnrtv]'/  
+                   match /u8'\\\o\{1,3}'/  display 
+                   match /u8'\\x\x\+'/  display 
+                   links to cSpecial
+cBadBlock      xxx start=/{/ end=/}/  contained keepend transparent fold containedin=cParen,cBracket,cBadBlock 
+cErrInParen    xxx match /[\]{}]\|<%\|%>/  display contained 
+                   links to cError
+cCppParen      xxx start=/(/ skip=/\\$/ end=/$/ end=/)/  contained excludenl transparent contains=ALLBUT,@cParenGroup,cErrInBracket,cParen,cBracket,cString,@Spell 
+cErrInBracket  xxx match /[);{}]\|<%\|%>/  display contained 
+                   links to cError
+cCppBracket    xxx start=/\[\|<::\@!/ skip=/\\$/ end=/$/ end=/]\|:>/  contained excludenl transparent contains=ALLBUT,@cParenGroup,cErrInParen,cParen,cBracket,cString,@Spell 
+cBlock         xxx start=/{/ end=/}/  transparent fold 
+cParenError    xxx match /[\])]/  display 
+                   links to cError
+cIncluded      xxx start=/"/ skip=/\\\\\|\\"/ end=/"/  display contained 
+                   match /<[^>]*>/  display contained 
+                   links to cString
+cCommentStartError xxx match +/\*+me=e-1  display contained 
+                   links to cError
+cUserLabel     xxx match /\I\i*/  display contained 
+                   links to Label
+cBitField      xxx match /^\s*\zs\I\i*\s*:\s*[1-9]/me=e-1  display contains=cType 
+                   match /;\s*\zs\I\i*\s*:\s*[1-9]/me=e-1  display contains=cType 
+cNumber        xxx match /\d\%('\=\d\+\)*\%(u\=l\{0,2}\|ll\=u\|u\=wb\|wbu\=\)\>/  display contained 
+                   match /0x\x\%('\=\x\+\)*\%(u\=l\{0,2}\|ll\=u\|u\=wb\|wbu\=\)\>/  display contained 
+                   match /0b[01]\%('\=[01]\+\)*\%(u\=l\{0,2}\|ll\=u\|u\=wb\|wbu\=\)\>/  display contained 
+                   links to Number
+cFloat         xxx match /\d\+\.\d*\%(e[-+]\=\d\+\)\=[fl]\=/  display contained 
+                   match /\.\d\+\%(e[-+]\=\d\+\)\=[fl]\=\>/  display contained 
+                   match /\d\+e[-+]\=\d\+[fl]\=\>/  display contained 
+                   match /0x\x*\.\x\+p[-+]\=\d\+[fl]\=\>/  display contained 
+                   match /0x\x\+\.\=p[-+]\=\d\+[fl]\=\>/  display contained 
+                   links to Float
+cOctal         xxx match /0\o\%('\=\o\+\)*\%(u\=l\{0,2}\|ll\=u\|u\=wb\|wbu\=\)\>/  display contained contains=cOctalZero 
+                   links to Number
+cOctalError    xxx match /0\o*[89]\d*/  display contained 
+                   links to cError
+cNumbersCom    xxx match /\<\d\|\.\d/  display contained transparent contains=cNumber,cFloat,cOctal 
+cParen         xxx start=/(/ end=/}/me=s-1 end=/)/  transparent contains=ALLBUT,cBlock,@cParenGroup,cCppParen,cErrInBracket,cCppBracket,@cStringGroup,@Spell 
+cBracket       xxx start=/\[\|<::\@!/ end=/}/me=s-1 end=/]\|:>/  transparent contains=ALLBUT,cBlock,@cParenGroup,cErrInParen,cCppParen,cCppBracket,@cStringGroup,@Spell 
+cNumbers       xxx match /\<\d\|\.\d/  display transparent contains=cNumber,cFloat,cOctalError,cOctal 
+cWrongComTail  xxx match +\*/+  display 
+                   links to cError
+cCommentL      xxx start=+//+ skip=/\\$/ end=/$/  keepend contains=@cCommentGroup,cSpaceError,@Spell 
+                   links to cComment
+cComment       xxx matchgroup=cCommentStart start=+/\*+ end=+\*/+  extend fold contains=@cCommentGroup,cCommentStartError,cSpaceError,@Spell 
+                   links to Comment
+cCommentError  xxx match +\*/+  display 
+                   links to cError
+cOperator      xxx _Generic sizeof typeof_unqual _Alignof _Static_assert alignof static_assert typeof
+                   links to Operator
+cType          xxx u_int32_t wchar_t uint8_t atomic_int_least64_t uint_fast32_t atomic_intmax_t _Bool _BitInt atomic_char32_t atomic_uintmax_t char8_t int_fast8_t int_least8_t atomic_ushort off_t _Complex uint_least32_t time_t int_fast32_t max_align_t atomic_int_least16_t atomic_uchar atomic_llong atomic_long ptrdiff_t atomic_schar uintptr_t uint64_t uint_fast8_t int_least32_t long void wint_t atomic_wchar_t complex _Decimal32 atomic_short uint_least8_t atomic_uint_least32_t uint16_t atomic_uint_fast32_t uint_fast64_t imaginary int32_t atomic_int_fast32_t unsigned _Decimal128 char16_t FILE uint_least64_t float va_list intptr_t int_fast64_t u_int64_t atomic_size_t atomic_uint_fast8_t uint_fast16_t atomic_ulong fpos_t atomic_char16_t wctrans_t div_t jmp_buf uintmax_t atomic_intptr_t atomic_int_least32_t mbstate_t int_least64_t atomic_ptrdiff_t _Imaginary size_t uint_least16_t atomic_uintptr_t int8_t _Decimal64 int_fast16_t DIR u_int16_t clock_t sig_atomic_t atomic_uint_least8_t atomic_bool atomic_uint_least64_t atomic_uint_fast64_t nullptr_t wctype_t int_least16_t atomic_int_least8_t atomic_char int64_t atomic_uint ldiv_t bool ssize_t uint32_t u_int8_t atomic_int double atomic_int_fast8_t short char intmax_t atomic_uint_least16_t atomic_uint_fast16_t char32_t int int16_t signed atomic_int_fast16_t atomic_ullong atomic_int_fast64_t
+                   links to Type
+cTypedef       xxx typedef
+                   links to Structure
+cStructure     xxx union struct enum
+                   links to Structure
+cStorageClass  xxx inline const volatile alignas register thread_local _Noreturn constexpr static extern _Alignas _Atomic restrict _Thread_local auto noreturn
+                   links to StorageClass
+cConstant      xxx stderr USHRT_MAX CHAR_BIT SIGINT SIGINT EINVAL LDBL_MIN_EXP INT_FAST32_MIN M_E UINT_LEAST16_MAX LONG_MAX EROFS EXIT_FAILURE ENOTSUP SCHAR_MAX SEEK_END EINPROGRESS SLONG_MIN SIGSEGV SIGSEGV ENOTBLK UINT_FAST8_MAX FP_ZERO ECONNRESET SIGINFO FLT_RADIX true ECONNREFUSED INT32_MAX ULLONG_MAX __STDC_LIB_EXT1__ EOWNERDEAD STDOUT_FILENO EADDRINUSE SHRT_MIN M_SQRT2 INT64_MAX WINT_MAX __STDC_MB_MIGHT_NEQ_WC__ NDEBUG ENOTDIR INT_FAST16_MAX FP_ILOGB0 ESPIPE __FILE__ M_PI EPROTONOSUPPORT TMP_MAX MB_LEN_MAX FP_ILOGBNAN ENODATA ENOTSOCK SIGKILL DBL_MIN_10_EXP INT_LEAST8_MAX LC_COLLATE INTMAX_MAX HUGE_VALF ENOSPC __VA_ARGS__ HUGE_VAL HUGE_VAL EIO LC_MONETARY LDBL_MIN HUGE_VALL INT_FAST64_MIN WCHAR_MIN EILSEQ __STDC_EMBED_EMPTY__ STDIN_FILENO INT_FAST32_MAX FLT_MIN EOF FP_NORMAL ENOSR DBL_MIN_EXP INT8_MAX ETIMEDOUT INT_FAST8_MIN ETIME FLT_EPSILON EIDRM stdin INT_FAST64_MAX EISDIR ENOENT __STDC_IEC_559_COMPLEX__ SIGSTOP UINT_LEAST32_MAX LDBL_MIN_10_EXP SLONG_MAX SIGWINCH EDESTADDRREQ SIG_ATOMIC_MIN EMULTIHOP SIZE_MAX __STDC_ANALYZABLE__ SIGTERM SIGTERM EPERM NULL __STDC_NO_COMPLEX__ INT_LEAST16_MIN __STDC_EMBED_NOT_FOUND__ SIGIO EPROTO FOPEN_MAX EMFILE UINT_LEAST64_MAX FP_SUBNORMAL DBL_MAX SIGFPE SIGFPE INT_LEAST32_MIN SIGPIPE SINT_MAX SHRT_MAX __STDC_VERSION__ FLT_MANT_DIG SIGQUIT UINT16_MAX FP_NAN SSHRT_MIN INT_LEAST64_MIN WEOF INTPTR_MAX EMSGSIZE __func__ __STDC_ISO_10646__ __STDC_NO_ATOMICS__ __STDC_UTF_16__ __STDC_UTF_16__ DBL_MANT_DIG EISCONN _IOFBF DBL_MAX_10_EXP stdout SIGUSR2 LC_ALL EMLINK SIGTTOU SIGHUP SIGHUP LDBL_MAX INT_LEAST16_MAX UINT32_MAX ENOPROTOOPT __DATE__ FLT_MAX __STDC_NO_THREADS__ EINTR EHOSTUNREACH FILENAME_MAX INT_FAST8_MAX BUFSIZ UINT64_MAX EDQUOT __STDC_NO_VLA__ EBADMSG INT_MIN UCHAR_MAX LDBL_EPSILON FLT_MIN_10_EXP M_LN10 SIGABRT SIGABRT ENOSYS SIG_ATOMIC_MAX nullptr LLONG_MIN ENETRESET UINT_FAST16_MAX ECHILD INT_LEAST32_MAX M_1_PI LDBL_DIG ENOLCK INFINITY false L_tmpnam ENOTTY FLT_DIG SSHRT_MAX INT_LEAST64_MAX EACCES __LINE__ UINT_LEAST8_MAX BITINT_MAXWIDTH __TIME__ CHAR_MIN ENOSTR M_PI_2 SINT_MIN M_PI_4 EPROTOTYPE __STDC__ UINTMAX_MAX __STDC_IEC_60559_TYPES__ __STDC_IEC_60559_COMPLEX__ EAFNOSUPPORT UINT_FAST32_MAX FLT_ROUNDS ENETDOWN __STDC_EMBED_FOUND__ EBUSY INTMAX_MIN SIGALRM _IONBF FLT_MAX_10_EXP LC_TIME EADDRNOTAVAIL ESTALE CLOCKS_PER_SEC FP_FAST_FMAF ENXIO ECONNABORTED SIGVTALRM _IOLBF ENODEV EXDEV FLT_MIN_EXP EFAULT M_2_PI SIGPOLL EALREADY INT_MAX LDBL_MAX_EXP NAN DBL_EPSILON ULONG_MAX ENOMEM SIGTRAP SIGSYS UINT_MAX STDERR_FILENO ENOBUFS ENFILE M_LOG2E LLONG_MAX LDBL_MAX_10_EXP SIG_IGN M_SQRT1_2 EDEADLK ENOTEMPTY DBL_DIG FP_FAST_FMAL LC_NUMERIC ENOEXEC INT16_MIN PTRDIFF_MIN MATH_ERREXCEPT ESRCH MATH_ERRNO MB_CUR_MAX RAND_MAX M_LN2 SIGXCPU ENOTCONN INTPTR_MIN ERANGE EOPNOTSUPP EXIT_SUCCESS CHAR_MAX SIGILL SIGILL LONG_MIN SIGBUS INT_LEAST8_MIN __VA_OPT__ SEEK_CUR SIGTTIN FLT_MAX_EXP FP_FAST_FMA ENOLINK SIG_DFL EDOM SEEK_SET INT32_MIN ENOTRECOVERABLE __STDC_HOSTED__ ELOOP SIGPROF SIGUSR1 ECANCELED UINT8_MAX EEXIST math_errhandling ENOMSG __STDC_IEC_60559_DFP__ LDBL_MANT_DIG EAGAIN INT64_MIN WINT_MIN EOVERFLOW INT_FAST16_MIN LC_CTYPE ENAMETOOLONG EBADF M_LOG10E E2BIG SIGCONT __STDC_IEC_60559_BFP__ WCHAR_MAX DBL_MAX_EXP EPIPE SIGURG ENETUNREACH M_2_SQRTPI SCHAR_MIN SIGTSTP UINTPTR_MAX UINT_FAST64_MAX SIGCHLD __STDC_UTF_32__ __STDC_UTF_32__ SIGXFSZ EFBIG SIG_ERR FP_INFINITE INT8_MIN INT16_MAX PTRDIFF_MAX ETXTBSY EWOULDBLOCK DBL_MIN
+                   links to Constant
+cPreCondit     xxx start=/^\s*\zs\%(%:\|#\)\s*\%(el\)\=\%(if\|ifdef\|ifndef\)\>/ skip=/\\$/ end=/$/  keepend contains=cComment,cCommentL,cCppString,cCharacter,cCppParen,cParenError,cNumbers,cCommentError,cSpaceError 
+                   links to PreCondit
+cInclude       xxx match /^\s*\zs\%(%:\|#\)\s*include\>\s*["<]/  display contains=cIncluded 
+                   start=/^\s*\zs\%(%:\|#\)\s*embed\>/ skip=/\\$/ end=/$/  keepend contains=cEmbed,cComment,cCommentL,cCppString,cCharacter,cCppParen,cParenError,cNumbers,cCommentError,cSpaceError 
+                   links to Include
+cDefine        xxx start=/^\s*\zs\%(%:\|#\)\s*\%(define\|undef\)\>/ skip=/\\$/ end=/$/  keepend contains=ALLBUT,@cPreProcGroup,@Spell 
+                   links to Macro
+cCppOutWrapper xxx start==^\s*\zs\%(%:\|#\)\s*if\s\+0\+\s*\%($\|//\|/\*\|&\)= end=/.\@=\|$/  fold contains=cCppOutIf,cCppOutElse,@NoSpell 
+                   links to cPreCondit
+cCppInWrapper  xxx start==^\s*\zs\%(%:\|#\)\s*if\s\+0*[1-9]\d*\s*\%($\|//\|/\*\||\)= end=/.\@=\|$/  fold contains=cCppInIf,cCppInElse 
+                   links to cCppOutWrapper
+cMulti         xxx start=/?/ skip=/::/ end=/:/  transparent contains=ALLBUT,@cMultiGroup,@Spell,@cStringGroup 
+cPreConditMatch xxx match /^\s*\zs\%(%:\|#\)\s*\%(else\|endif\)\>/  display 
+                   links to cPreCondit
+cCppInIf       xxx matchgroup=cCppInWrapper start=/\d\+/ end=/^\s*\%(%:\|#\)\s*endif\>/  contained contains=TOP,cPreCondit 
+cCppInElse     xxx start==^\s*\%(%:\|#\)\s*\%(else\>\|el\%(if\|ifdef\|ifndef\)\s\+\%(0*[1-9]\d*\s*\%($\|//\|/\*\||\)\)\@!\)= end=/.\@=\|$/  contained fold contains=cCppInElse2 containedin=cCppInIf 
+cCppInElse2    xxx matchgroup=cCppInWrapper start=+^\s*\%(%:\|#\)\s*\%(else\|el\%(if\|ifdef\|ifndef\)\)\%([^/]\|/[^/*]\)*+ end=/^\s*\%(%:\|#\)\s*endif\>/me=s-1  contained contains=cSpaceError,cCppOutSkip,@Spell 
+                   links to cCppOutIf2
+cCppOutIf      xxx start=/0\+/ matchgroup=cCppOutWrapper end=/^\s*\%(%:\|#\)\s*endif\>/  contained contains=cCppOutIf2,cCppOutElse 
+cCppOutIf2     xxx matchgroup=cCppOutWrapper start=/0\+/ end==^\s*\%(%:\|#\)\s*\%(else\>\|el\%(if\|ifdef\|ifndef\)\s\+\%(0\+\s*\%($\|//\|/\*\|&\)\)\@!\|endif\>\)=me=s-1  contained fold contains=cSpaceError,cCppOutSkip,@Spell 
+                   links to cCppOut
+cCppOutElse    xxx matchgroup=cCppOutWrapper start=/^\s*\%(%:\|#\)\s*\%(else\|el\%(if\|ifdef\|ifndef\)\)/ end=/^\s*\%(%:\|#\)\s*endif\>/me=s-1  contained contains=TOP,cPreCondit 
+cCppInSkip     xxx matchgroup=cCppInWrapper start==^\s*\%(%:\|#\)\s*\%(if\s\+\%(\d\+\s*\%($\|//\|/\*\||\|&\)\)\@!\|ifdef\>\|ifndef\>\)= skip=/\\$/ end=/^\s*\%(%:\|#\)\s*endif\>/  contained contains=TOP,cPreProc containedin=cCppOutElse,cCppInIf,cCppInSkip 
+cCppOutSkip    xxx start=/^\s*\%(%:\|#\)\s*\%(if\>\|ifdef\>\|ifndef\>\)/ skip=/\\$/ end=/^\s*\%(%:\|#\)\s*endif\>/  contained contains=cSpaceError,cCppOutSkip 
+                   links to cCppOutIf2
+cPreProc       xxx start=/^\s*\zs\%(%:\|#\)\s*\%(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)/ skip=/\\$/ end=/$/  keepend contains=ALLBUT,@cPreProcGroup,@Spell 
+                   links to PreProc
+cEmbed         xxx match /\%(%:\|#\)\s*embed\>/  contained transparent nextgroup=cIncluded skipwhite 
+cPragma        xxx start=/^\s*#pragma\s\+region\>/ end=/^\s*#pragma\s\+endregion\>/  keepend extend transparent fold 
+cUserCont      xxx match /^\s*\zs\I\i*\s*:$/  display contains=@cLabelGroup 
+                   match /;\s*\zs\I\i*\s*:$/  display contains=@cLabelGroup 
+                   match /^\s*\zs\I\i*\s*:[^:]/me=e-1  display contains=@cLabelGroup 
+                   match /;\s*\zs\I\i*\s*:[^:]/me=e-1  display contains=@cLabelGroup 
+cCommentGroup  cluster=cTodo,cBadContinuation 
+Spell          cluster=NONE
+cStringGroup   cluster=cCppString,cCppSkip 
+cParenGroup    cluster=cParenError,cIncluded,cSpecial,cCommentSkip,cCommentString,cComment2String,@cCommentGroup,cCommentStartError,cUserLabel,cBitField,cOctalZero,@cCppOutInGroup,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom 
+cCppOutInGroup cluster=cCppInIf,cCppInElse,cCppInElse2,cCppOutIf,cCppOutIf2,cCppOutElse,cCppInSkip,cCppOutSkip 
+cPreProcGroup  cluster=cSpecial,cFormat,cString,cBadBlock,cErrInParen,cErrInBracket,cIncluded,cCommentSkip,cCommentString,cComment2String,cCommentStartError,cUserLabel,cOctalZero,cNumber,cFloat,cOctal,cOctalError,cNumbersCom,cParen,cBracket,cPreCondit,cInclude,cDefine,cCppOutWrapper,cCppInWrapper,cMulti,cEmbed,@cCommentGroup,@cCppOutInGroup 
+NoSpell        cluster=NONE
+cMultiGroup    cluster=cIncluded,cSpecial,cCommentSkip,cCommentString,cComment2String,@cCommentGroup,cCommentStartError,cUserCont,cUserLabel,cBitField,cOctalZero,cCppOutWrapper,cCppInWrapper,@cCppOutInGroup,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom,cCppParen,cCppBracket,cCppString 
+cLabelGroup    cluster=cUserLabel 
